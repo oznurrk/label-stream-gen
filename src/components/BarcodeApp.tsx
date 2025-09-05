@@ -409,3 +409,5 @@ export const BarcodeApp = () => {
     </div>
   );
 };
+
+export default BarcodeApp;

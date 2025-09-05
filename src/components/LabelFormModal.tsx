@@ -255,3 +255,5 @@ export const LabelFormModal: React.FC<LabelFormModalProps> = ({
     </Dialog>
   );
 };
+
+export default LabelFormModal;
