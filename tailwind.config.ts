@@ -52,6 +52,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				ivosis: {
+					50: 'hsl(var(--ivosis-50))',
+					100: 'hsl(var(--ivosis-100))',
+					200: 'hsl(var(--ivosis-200))',
+					300: 'hsl(var(--ivosis-300))',
+					400: 'hsl(var(--ivosis-400))',
+					500: 'hsl(var(--ivosis-500))',
+					600: 'hsl(var(--ivosis-600))',
+					700: 'hsl(var(--ivosis-700))',
+					800: 'hsl(var(--ivosis-800))',
+					900: 'hsl(var(--ivosis-900))',
+					950: 'hsl(var(--ivosis-950))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

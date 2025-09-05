@@ -7,34 +7,61 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  :root {
+:root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 198 100% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 198 100% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 198 100% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Ivosis Primary Colors */
+    --primary: 194 68% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 194 53% 96%;
+    --secondary-foreground: 194 68% 42%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 194 53% 96%;
+    --muted-foreground: 194 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 194 53% 87%;
+    --accent-foreground: 194 68% 42%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 194 53% 87%;
+    --input: 194 53% 92%;
+    --ring: 194 68% 42%;
+
+    /* Ivosis Extended Palette */
+    --ivosis-50: 194 53% 96%;
+    --ivosis-100: 194 53% 92%;
+    --ivosis-200: 194 49% 84%;
+    --ivosis-300: 194 52% 71%;
+    --ivosis-400: 194 53% 53%;
+    --ivosis-500: 194 68% 42%;
+    --ivosis-600: 194 61% 32%;
+    --ivosis-700: 198 54% 30%;
+    --ivosis-800: 198 42% 26%;
+    --ivosis-900: 198 46% 23%;
+    --ivosis-950: 198 62% 15%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--ivosis-500)), hsl(var(--ivosis-600)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--ivosis-950)), hsl(var(--ivosis-700)));
+    --gradient-card: linear-gradient(180deg, hsl(var(--ivosis-50)), hsl(var(--card)));
+
+    /* Shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--ivosis-500) / 0.2);
+    --shadow-card: 0 4px 6px -1px hsl(var(--ivosis-500) / 0.1);
+    --shadow-hover: 0 10px 25px -5px hsl(var(--ivosis-500) / 0.25);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --radius: 0.5rem;
 
