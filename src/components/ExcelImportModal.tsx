@@ -237,7 +237,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
       labels.push({
         etiketNo: prefix + (startNum + i),
         malzeme: formData.projeAdi || 'TARIMSAL',
-        ebat: formData.kalinlik + 'x' + formData.genislik,
+        ebat: formData.kalinlik + '' + formData.genislik,
         seriLot: formData.seriLot,
         agirlik: Math.round(parseInt(formData.agirlik) / formData.miktar),
         tarih: formData.tarih

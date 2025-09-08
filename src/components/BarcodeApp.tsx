@@ -155,58 +155,47 @@ export const BarcodeApp = () => {
       return;
     }
     
+      // 100x70mm etiket tasarımı
     const printContent = selectedLabels.map(label => `
       <div style="
         width: 100mm; 
         height: 70mm; 
-        padding: 2mm; 
-        margin: auto;
-        page-break-inside: avoid;
-        page-break-before: always;
+        padding: 2mm;         
+        page-break-inside: avoid;   /* yazdırırken bölünmesin */
+        page-break-after: always;  /* yeni sayfada başlasın */
         font-family: 'Arial', sans-serif;
-        background: white;
-        justify-content: center;
+        background: white;  
+        
       ">
+        <!-- Etiket No -->
         <div style="text-align: center; margin-bottom: 3mm;">
           <div style="font-size: 24pt; font-weight: bold; color: #000;">
             ${label.etiketNo}
           </div>
         </div>
+
+        <!-- Bilgiler -->
         <div style="flex: 1; display: flex; flex-direction: column; text-align: center; justify-content: space-around;">
-          <div style="font-size: 18pt; font-weight: bold; color: #000;">${label.malzeme}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000;">${label.ebat.replace('x', 'X').replace('X', ' X ')}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000;">${label.seriLot}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000;">${new Date(label.tarih).toLocaleDateString('tr-TR')}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000;">${label.agirlik.toLocaleString()} KG</div>
+          <div style="font-size: 18pt; font-weight: bold; color: #000; "> ${label.malzeme}</div>
+          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${label.ebat.replace('x', 'X').replace('X', ' X ')}</div>
+          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${label.seriLot}</div>
+          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${new Date(label.tarih).toLocaleDateString('tr-TR')}</div>
+          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${label.agirlik.toLocaleString()} KG</div>
         </div>
       </div>
     `).join('');
     
     const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Etiket Yazdırma</title>
-          <style>
-            @media print {
-              body { margin: 0; }
-              @page { size: 100mm 70mm; margin: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          ${printContent}
-          <script>
-            window.print();
-            window.onafterprint = () => window.close();
-          </script>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
+    printWindow.document.write(`
+        ${printContent}
+        <script>
+          window.print();
+          window.onafterprint = () => window.close();
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
   };
 
   return (
@@ -223,10 +212,9 @@ export const BarcodeApp = () => {
                 DİLME PLANLARI sheet'inden otomatik etiket oluşturma sistemi
               </p>
             </div>
+            
             <div className="hidden lg:block">
-              <Badge variant="secondary" className="bg-ivosis-100 text-ivosis-900 text-lg px-4 py-2">
-                Ivosis Çelik
-              </Badge>
+              <img src="/ivosisCelik2.png" alt="Ivosis Çelik Logo" className="h-16 w-auto" />
             </div>
           </div>
         </div>
