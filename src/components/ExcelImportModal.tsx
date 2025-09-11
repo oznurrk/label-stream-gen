@@ -32,7 +32,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 }) => {
   const [step, setStep] = useState<'upload' | 'preview' | 'configure'>('upload');
   const [importData, setImportData] = useState<ImportData[]>([]);
-  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [formData, setFormData] = useState({
     baslangicDegeri: '',
     miktar: 1,
@@ -43,6 +43,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
     projeAdi: '',
     tarih: new Date().toISOString().split('T')[0]
   });
+  const [currentEditIdx, setCurrentEditIdx] = useState<number>(0); // index within selectedRows
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -207,9 +208,20 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
     return processedData;
   };
 
-  const handleRowSelect = (index: number) => {
-    const row = importData[index];
-    setSelectedRow(index);
+  const toggleRowSelection = (index: number) => {
+    setSelectedRows(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedRows.length === importData.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(importData.map((_, i) => i));
+    }
+  };
+
+  const loadRowToForm = (rowIndex: number) => {
+    const row = importData[rowIndex];
     setFormData({
       ...formData,
       genislik: row.ebat.toString(),
@@ -220,40 +232,95 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
       baslangicDegeri: row.etiketNo || 'A108',
       miktar: row.miktar || 1
     });
+  };
+
+  const proceedToConfigure = () => {
+    if (selectedRows.length === 0) return;
+    setCurrentEditIdx(0);
+    loadRowToForm(selectedRows[0]);
     setStep('configure');
+  };
+
+  const switchEditingRow = (pos: number) => {
+    if (pos < 0 || pos >= selectedRows.length) return;
+    setCurrentEditIdx(pos);
+    loadRowToForm(selectedRows[pos]);
+  };
+
+  const handleSaveEdits = () => {
+    if (selectedRows.length === 0) return;
+    const realRowIndex = selectedRows[currentEditIdx];
+    setImportData(prev => prev.map((row, idx) => idx === realRowIndex ? {
+      ...row,
+      etiketNo: formData.baslangicDegeri,
+      projeAdi: formData.projeAdi,
+      seriLot: formData.seriLot,
+      ebat: formData.genislik,
+      agirlik: parseInt(formData.agirlik) || row.agirlik,
+      miktar: formData.miktar || row.miktar,
+      tarih: formData.tarih
+    } : row));
   };
 
   const generateLabels = () => {
     const labels: Omit<LabelType, 'id'>[] = [];
-    const match = formData.baslangicDegeri.match(/^([A-Z]+)(\d+)$/);
+    const startingValue = (formData.baslangicDegeri || '').toString().trim() || (
+      selectedRows.length > 0 ? (importData[selectedRows[0]]?.etiketNo?.toString().trim() || '') : ''
+    );
+    const match = startingValue.match(/^([A-Z]+)(\d+)$/);
     if (!match) {
       alert('Başlangıç değeri formatı hatalı (örn: A108)');
       return;
     }
     const prefix = match[1];
-    const startNum = parseInt(match[2]);
+    let currentNum = parseInt(match[2]);
 
-    for (let i = 0; i < formData.miktar; i++) {
-      labels.push({
-        etiketNo: prefix + (startNum + i),
-        malzeme: formData.projeAdi || 'TARIMSAL',
-        ebat: formData.kalinlik + '' + formData.genislik,
-        seriLot: formData.seriLot,
-        agirlik: Math.round(parseInt(formData.agirlik) / formData.miktar),
-        tarih: formData.tarih
+    const rowsToProcess = selectedRows.length > 0 ? selectedRows.map(i => importData[i]) : [];
+    if (rowsToProcess.length === 0) {
+      // Fallback: tek form miktarı
+      for (let i = 0; i < formData.miktar; i++) {
+        labels.push({
+          etiketNo: prefix + (currentNum++),
+          malzeme: formData.projeAdi || 'TARIMSAL',
+          ebat: formData.genislik,
+          seriLot: formData.seriLot,
+          agirlik: Math.round(parseInt(formData.agirlik) / formData.miktar),
+          tarih: formData.tarih
+        });
+      }
+    } else {
+      rowsToProcess.forEach(row => {
+        const adet = row.miktar || 1;
+        const rowStart = (row.etiketNo || '').toString().trim();
+        const rowMatch = rowStart.match(/^([A-Z]+)(\d+)$/);
+        if (!rowMatch) {
+          return; // geçersiz başlangıç değeri olan satırı atla
+        }
+        const rowPrefix = rowMatch[1];
+        let rowNum = parseInt(rowMatch[2]);
+        for (let i = 0; i < adet; i++) {
+          labels.push({
+            etiketNo: rowPrefix + (rowNum++),
+            malzeme: row.projeAdi,
+            ebat: row.ebat.toString(),
+            seriLot: row.seriLot,
+            agirlik: Math.round(row.agirlik / adet),
+            tarih: row.tarih
+          });
+        }
       });
     }
     onImport(labels);
     setStep('upload');
     setImportData([]);
-    setSelectedRow(null);
+    setSelectedRows([]);
     onClose();
   };
 
   const resetModal = () => {
     setStep('upload');
     setImportData([]);
-    setSelectedRow(null);
+    setSelectedRows([]);
   };
 
   return (
@@ -312,7 +379,9 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                 <table className="w-full border-collapse border border-ivosis-200">
                   <thead className="bg-ivosis-50">
                     <tr>
-                      <th className="p-3 border border-ivosis-200 text-left">Seç</th>
+                      <th className="p-3 border border-ivosis-200 text-left">
+                        <input type="checkbox" checked={selectedRows.length === importData.length && importData.length > 0} onChange={toggleSelectAll} />
+                      </th>
                       <th className="p-3 border border-ivosis-200 text-left">Etiket No</th>
                       <th className="p-3 border border-ivosis-200 text-left">Proje</th>
                       <th className="p-3 border border-ivosis-200 text-left">Seri/Lot</th>
@@ -326,16 +395,10 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                     {importData.map((row, index) => (
                       <tr 
                         key={index} 
-                        className={selectedRow === index ? 'bg-ivosis-100' : 'hover:bg-ivosis-50'}
+                        className={selectedRows.includes(index) ? 'bg-ivosis-100' : 'hover:bg-ivosis-50'}
                       >
                         <td className="p-3 border border-ivosis-200">
-                          <Button 
-                            onClick={() => handleRowSelect(index)} 
-                            size="sm"
-                            className="bg-ivosis-500 hover:bg-ivosis-600"
-                          >
-                            Seç
-                          </Button>
+                          <input type="checkbox" checked={selectedRows.includes(index)} onChange={() => toggleRowSelection(index)} />
                         </td>
                         <td className="p-3 border border-ivosis-200">{row.etiketNo}</td>
                         <td className="p-3 border border-ivosis-200">{row.projeAdi}</td>
@@ -446,7 +509,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                     const etiketNo = prefix + (num + i);
                     return (
                       <div key={i} className="bg-white p-3 rounded border text-sm">
-                        <strong>{etiketNo}</strong> {formData.projeAdi} {formData.kalinlik}x{formData.genislik} {formData.seriLot} {Math.round(parseInt(formData.agirlik || '0') / formData.miktar)}kg {formData.tarih}
+                        <strong>{etiketNo}</strong> {formData.projeAdi} {formData.genislik} {formData.seriLot} {Math.round(parseInt(formData.agirlik || '0') / formData.miktar)}kg {formData.tarih}
                       </div>
                     );
                   })}
@@ -463,19 +526,39 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
         <div className="flex gap-3 justify-end pt-4 border-t border-ivosis-200">
           {step === 'preview' && (
-            <Button onClick={resetModal} variant="outline" className="border-ivosis-300 text-ivosis-700 hover:bg-ivosis-50">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Geri
-            </Button>
+            <>
+              <Button onClick={resetModal} variant="outline" className="border-ivosis-300 text-ivosis-700 hover:bg-ivosis-50">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Geri
+              </Button>
+              <Button onClick={proceedToConfigure} disabled={selectedRows.length === 0} className="bg-ivosis-500 hover:bg-ivosis-600 disabled:opacity-50">
+                Seçilenleri Düzenle ({selectedRows.length})
+              </Button>
+              <Button onClick={generateLabels} disabled={selectedRows.length === 0} className="bg-ivosis-600 hover:bg-ivosis-700 disabled:opacity-50">
+                Etiket Oluştur
+              </Button>
+            </>
           )}
           {step === 'configure' && (
             <>
+              <div className="w-full flex flex-wrap items-center gap-2 mb-2">
+                {selectedRows.map((rowIdx, i) => (
+                  <button
+                    key={rowIdx}
+                    type="button"
+                    onClick={() => switchEditingRow(i)}
+                    className={`px-2 py-1 rounded border ${i === currentEditIdx ? 'bg-ivosis-500 text-white border-ivosis-500' : 'bg-white text-ivosis-900 border-ivosis-300'}`}
+                  >
+                    {importData[rowIdx]?.etiketNo || `Satır ${rowIdx + 1}`}
+                  </button>
+                ))}
+              </div>
               <Button onClick={() => setStep('preview')} variant="outline" className="border-ivosis-300 text-ivosis-700 hover:bg-ivosis-50">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Geri
               </Button>
-              <Button onClick={generateLabels} className="bg-ivosis-500 hover:bg-ivosis-600">
-                {formData.miktar} Etiket Oluştur
+              <Button type="button" onClick={handleSaveEdits} className="bg-ivosis-500 hover:bg-ivosis-600">
+                Kaydet
               </Button>
             </>
           )}

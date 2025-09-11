@@ -214,7 +214,7 @@ export const BarcodeApp = () => {
             </div>
             
             <div className="hidden lg:block">
-              <img src="/ivosisCelik2.png" alt="Ivosis Çelik Logo" className="h-16 w-auto" />
+              <img src="./ivosisCelik2.png" alt="Ivosis Çelik Logo" className="h-16 w-auto" />
             </div>
           </div>
         </div>
