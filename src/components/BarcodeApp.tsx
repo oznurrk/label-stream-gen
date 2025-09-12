@@ -155,47 +155,77 @@ export const BarcodeApp = () => {
       return;
     }
     
-      // 100x70mm etiket tasarımı
+    // 100x70mm etiket tasarımı
     const printContent = selectedLabels.map(label => `
       <div style="
         width: 100mm; 
         height: 70mm; 
-        padding: 2mm;         
-        page-break-inside: avoid;   /* yazdırırken bölünmesin */
-        page-break-after: always;  /* yeni sayfada başlasın */
+        padding: 3mm 4mm 4mm 6mm;         
+        page-break-inside: avoid;
+        page-break-after: always;
         font-family: 'Arial', sans-serif;
-        background: white;  
-        
+        background: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        box-sizing: border-box;
+        gap: 2mm;
       ">
-        <!-- Etiket No -->
-        <div style="text-align: center; margin-bottom: 3mm;">
-          <div style="font-size: 24pt; font-weight: bold; color: #000;">
-            ${label.etiketNo}
-          </div>
+        <div style="font-size: 28pt; font-weight: bold; color: #000; text-align: left; margin-bottom: 1mm;">
+          ${label.etiketNo}
         </div>
-
-        <!-- Bilgiler -->
-        <div style="flex: 1; display: flex; flex-direction: column; text-align: center; justify-content: space-around;">
-          <div style="font-size: 18pt; font-weight: bold; color: #000; "> ${label.malzeme}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${label.ebat.replace('x', 'X').replace('X', ' X ')}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${label.seriLot}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${new Date(label.tarih).toLocaleDateString('tr-TR')}</div>
-          <div style="font-size: 18pt; font-weight: bold; color: #000; ">${label.agirlik.toLocaleString()} KG</div>
+        <div style="font-size: 16pt; font-weight: bold; color: #000; text-align: left;">
+          ${label.malzeme}
+        </div>
+        <div style="font-size: 16pt; font-weight: bold; color: #000; text-align: left;">
+          ${label.ebat.replace('x', 'X').replace('X', ' X ')}
+        </div>
+        <div style="font-size: 16pt; font-weight: bold; color: #000; text-align: left;">
+          ${label.seriLot}
+        </div>
+        <div style="font-size: 16pt; font-weight: bold; color: #000; text-align: left;">
+          ${new Date(label.tarih).toLocaleDateString('tr-TR')}
+        </div>
+        <div style="font-size: 16pt; font-weight: bold; color: #000; text-align: left;">
+          ${label.agirlik.toLocaleString()} KG
         </div>
       </div>
     `).join('');
     
     const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({ title: 'Hata', description: 'Yazdırma penceresi açılamadı', variant: 'destructive' });
+      return;
+    }
+    
     printWindow.document.write(`
-        ${printContent}
-        <script>
-          window.print();
-          window.onafterprint = () => window.close();
-        </script>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Etiket Yazdır</title>
+          <style>
+            @page { size: 100mm 70mm; margin: 0; }
+            body { margin: 0; padding: 0; background: white; }
+          </style>
+        </head>
+        <body>
+          ${printContent}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // İçerik yüklendikten sonra yazdır
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.onafterprint = () => printWindow.close();
+      }, 100);
+    };
   };
 
   return (
